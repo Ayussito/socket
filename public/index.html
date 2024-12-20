@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Express + WebSocket</title>
+  </head>
+  <body>
+    <h1>Componente Emisor</h1>
+    <button onclick="sendMessage('Botón 1')">Botón 1</button>
+    <button onclick="sendMessage('Botón 2')">Botón 2</button>
+    <button onclick="sendMessage('Botón 3')">Botón 3</button>
+
+    <h1>Componente Receptor</h1>
+    <div id="messages">
+      <p>Aquí aparecerán los nombres de los botones recibidos.</p>
+    </div>
+
+    <script>
+      // Conexión WebSocket
+      const ws = new WebSocket(`ws://127.0.0.1:1234`);
+
+      ws.onopen = () => {
+        console.log("Conexión WebSocket abierta");
+      };
+
+      ws.onmessage = (event) => {
+        const messagesDiv = document.getElementById("messages");
+        const newMessage = document.createElement("p");
+
+        if (event.data instanceof Blob) {
+          // If it's a Blob, we need to convert it to text
+          const reader = new FileReader();
+          reader.onload = function (e) {
+            newMessage.textContent = e.target.result; // The result is the message as text
+            messagesDiv.appendChild(newMessage);
+          };
+          reader.readAsText(event.data); // Read the Blob as a string
+        } else {
+          // If it's already text, just append it
+          newMessage.textContent = `${event.data}`;
+          messagesDiv.appendChild(newMessage);
+        }
+      };
+
+      ws.onclose = () => {
+        console.log("Conexión WebSocket cerrada");
+      };
+
+      function sendMessage(buttonName) {
+        if (ws.readyState === WebSocket.OPEN) {
+          ws.send(buttonName);
+        } else {
+          console.error("WebSocket no está conectado.");
+        }
+      }
+    </script>
+  </body>
+</html>
